@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:16
+    container_name: jwt_demo_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-jwt_demo}
+      POSTGRES_USER: ${POSTGRES_USER:-jwt_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jwt_pass_123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jwt_user} -d ${POSTGRES_DB:-jwt_demo}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    container_name: jwt_demo_backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-jwt_demo}
+      DB_USERNAME: ${POSTGRES_USER:-jwt_user}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-jwt_pass_123}
+      APP_JWT_SECRET: ${APP_JWT_SECRET:-change-me-to-a-very-very-long-32+-char-secret}
+      APP_JWT_EXPIRATION_MS: ${APP_JWT_EXPIRATION_MS:-3600000}
+      # CORS is not needed when using nginx proxy, but keeping it doesn't hurt
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    container_name: jwt_demo_frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    # no env needed; nginx proxies /api to backend
+
+volumes:
+  pgdata:
