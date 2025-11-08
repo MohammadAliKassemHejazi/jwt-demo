@@ -69,19 +69,19 @@ public class SecurityConfig {
     }
 
     // CORS: allow your frontend origin(s)
-    @Bean
-    CorsConfigurationSource corsConfigurationSource(
-            @Value("${cors.allowed-origins:http://localhost:3000}") String origins) {
-        CorsConfiguration cfg = new CorsConfiguration();
-        cfg.setAllowedOrigins(Arrays.asList(origins.split(",")));
-        cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH"));
-        cfg.setAllowedHeaders(List.of("*"));
-        cfg.setAllowCredentials(true);
+@Bean
+CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration cfg = new CorsConfiguration();
+    cfg.addAllowedOriginPattern("*"); // Allows all origins (use addAllowedOriginPattern instead of addAllowedOrigin)
+    cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+    cfg.setAllowedHeaders(List.of("*"));
+    cfg.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", cfg);
-        return source;
-    }
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", cfg);
+    return source;
+}
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
